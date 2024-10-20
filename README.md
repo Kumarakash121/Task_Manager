@@ -39,5 +39,5 @@ A simple task management application built with React, allowing users to add, ed
    npm start
 
 
-   Open your browser and navigate to http://localhost:xxxx to see the application in action.
+   Open your browser and navigate to http://localhost:3000 to see the application in action.
 

@@ -1,23 +1,42 @@
-<<<<<<< HEAD
-# Task_Manager
-=======
-# Task Management App
+# Task Manager
 
-## Setup
-1. Clone the repository.
-2. Run `npm install` to install dependencies.
-3. Run `npm run dev` to start the development server.
+A simple task management application built with React, allowing users to add, edit, delete, and manage tasks. The app persists data using local storage, ensuring that tasks are saved between page reloads.
 
 ## Features
-- Add, Edit, Delete, and Mark Tasks as Completed
-- Sort tasks by priority
-- Responsive design
-- Local storage persistence
-- Simple search functionality
 
-## Sorting Tasks
-Tasks are sorted by priority using a simple numeric ranking system where:
-- High = 1
-- Medium = 2
-- Low = 3
->>>>>>> master
+- Add new tasks with a title, description, and priority (high, medium, low).
+- Edit existing tasks.
+- Delete tasks.
+- Mark tasks as completed or pending.
+- Search functionality to filter tasks.
+- Task prioritization and sorting.
+
+## Technologies Used
+
+- React
+- TypeScript
+- Tailwind CSS
+- Local Storage
+
+## Setup Instructions
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- npm (Node Package Manager)
+
+### Installation
+
+1. **Clone the Repository**:
+   
+   git clone https://github.com/Kumarakash121/Task_Manager.git
+   cd task-manager
+   
+2. Install Dependencies:
+    npm install
+   
+3. Start the Development Server:
+   npm start
+
+
+   Open your browser and navigate to http://localhost:3000 to see the application in action.

@@ -1,101 +1,183 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from 'react';
+import { addTask, editTask, deleteTask, toggleTaskCompletion, sortTasksByPriority } from '../utils/taskUtils';
+import { Task } from '../types/Task';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [taskList, setTaskList] = useState<Task[]>(() => {
+    const storedTasks = localStorage.getItem('tasks');
+    return storedTasks ? JSON.parse(storedTasks) : [];
+  });
+  
+  const [newTask, setNewTask] = useState<{ title: string; description: string; priority: 'high' | 'medium' | 'low' }>({
+    title: '',
+    description: '',
+    priority: 'medium',
+  });
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  useEffect(() => {
+    // Save tasks to localStorage whenever taskList changes
+    localStorage.setItem('tasks', JSON.stringify(taskList));
+  }, [taskList]);
+
+  const handleAddTask = () => {
+    const task: Task = { ...newTask, id: Date.now(), completed: false };
+    setTaskList(prevTasks => [...prevTasks, task]);
+    setNewTask({ title: '', description: '', priority: 'medium' });
+  };
+
+  const handleEditTask = (task: Task) => {
+    setActiveTask(task);
+    setNewTask({ title: task.title, description: task.description, priority: task.priority });
+    setModalVisible(true);
+  };
+
+  const handleDeleteTask = (taskId: number) => {
+    setTaskList(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  };
+
+  const handleToggleCompletion = (taskId: number) => {
+    setTaskList(prevTasks =>
+      prevTasks.map(task =>
+        task.id === taskId ? { ...task, completed: !task.completed } : task
+      )
+    );
+  };
+
+  const filteredTasks = taskList.filter(task =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSaveEdit = () => {
+    if (activeTask) {
+      const updatedTask = { ...activeTask, description: newTask.description, priority: newTask.priority };
+      setTaskList(prevTasks => prevTasks.map(task => (task.id === activeTask.id ? updatedTask : task)));
+      setModalVisible(false);
+      setActiveTask(null);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6">
+      <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg p-8">
+        <h1 className="text-4xl font-bold text-center text-gray-800 mb-6">Task Manager</h1>
+
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+        />
+
+        {/* Add Task Form */}
+        {!modalVisible && (
+          <form onSubmit={(e) => { e.preventDefault(); handleAddTask(); }} className="mb-6">
+            <input
+              type="text"
+              placeholder="Task Title"
+              value={newTask.title}
+              onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+              className="w-full p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+            <textarea
+              placeholder="Task Description"
+              value={newTask.description}
+              onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+              className="w-full p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            />
+            <select
+              value={newTask.priority}
+              onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'high' | 'medium' | 'low' })}
+              className="w-full p-4 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            >
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <button type="submit" className="w-full p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+              Add Task
+            </button>
+          </form>
+        )}
+
+        <ul className="space-y-4">
+          {sortTasksByPriority(filteredTasks).map(task => (
+            <li key={task.id} className={`flex justify-between items-center p-4 rounded-lg shadow ${task.completed ? 'bg-green-100' : 'bg-gray-100'} transition`}>
+              <div className="flex items-center">
+                <span className={`flex-1 ${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}`}>
+                  {task.title}
+                </span>
+                {task.priority === 'high' && (
+                  <span className="px-2 py-0.5 text-xs text-white bg-red-500 rounded-full ml-2">High</span>
+                )}
+                {task.priority === 'medium' && (
+                  <span className="px-2 py-0.5 text-xs text-white bg-yellow-500 rounded-full mx-2">Medium</span>
+                )}
+                {task.priority === 'low' && (
+                  <span className="px-2 py-0.5 text-xs text-white bg-green-500 rounded-full">Low</span>
+                )}
+              </div>
+              <div className="flex items-center ml-2">
+                <button onClick={() => handleToggleCompletion(task.id)} className="mr-2 p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
+                  {task.completed ? 'Mark as Pending' : 'Mark as Completed'}
+                </button>
+                <button onClick={() => handleEditTask(task)} className="mr-2 p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Edit</button>
+                <button onClick={() => handleDeleteTask(task.id)} className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Edit Modal */}
+        {modalVisible && activeTask && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg p-6 w-11/12 max-w-md">
+              <h2 className="text-xl font-bold mb-4">Edit Task</h2>
+              <input
+                type="text"
+                value={newTask.title}
+                onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                className="w-full p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+              <textarea
+                value={newTask.description}
+                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                className="w-full p-4 mb-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              />
+              <div className="flex mb-4">
+                <span
+                  className={`cursor-pointer flex items-center justify-center px-2 py-0.5 rounded-full ${newTask.priority === 'high' ? 'bg-red-500' : 'bg-gray-300'} hover:bg-red-400 transition`}
+                  onClick={() => setNewTask({ ...newTask, priority: 'high' })}
+                >
+                  <span className="text-xs text-white">High</span>
+                </span>
+                <span
+                  className={`cursor-pointer flex items-center justify-center px-2 py-0.5 rounded-full ${newTask.priority === 'medium' ? 'bg-yellow-500' : 'bg-gray-300'} hover:bg-yellow-400 transition mx-2`}
+                  onClick={() => setNewTask({ ...newTask, priority: 'medium' })}
+                >
+                  <span className="text-xs text-white">Medium</span>
+                </span>
+                <span
+                  className={`cursor-pointer flex items-center justify-center px-2 py-0.5 rounded-full ${newTask.priority === 'low' ? 'bg-green-500' : 'bg-gray-300'} hover:bg-green-400 transition`}
+                  onClick={() => setNewTask({ ...newTask, priority: 'low' })}
+                >
+                  <span className="text-xs text-white">Low</span>
+                </span>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button onClick={() => setModalVisible(false)} className="mr-2 p-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition">Cancel</button>
+                <button onClick={handleSaveEdit} className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">Save</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
